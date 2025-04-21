@@ -1,0 +1,29 @@
+name = "TSPDroneICP"
+uuid = "8c8b6666-8f41-4dc1-94df-9b29d6d038be"
+authors = ["Jae Hyeok Lee <daniel0000900@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+Concorde = "df6a336b-a67f-4155-81fc-4f05fe893652"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+LKH = "294deba0-74fa-42c9-af84-c3834b01fefc"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+TSPDrone = "ec3913bb-036d-4a1d-a51c-80e93297dcf2"
+TravelingSalesmanHeuristics = "8c8f4381-2cdd-507c-846c-be2bcff6f45f"
+
+[compat]
+Concorde = "0.2.0"
+DelimitedFiles = "1"
+Distances = "0.10.12"
+LKH = "0.1.1"
+PyCall = "1.90"
+TSPDrone = "0.1.0"
+TravelingSalesmanHeuristics = "0.3.4"
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

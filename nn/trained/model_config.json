@@ -1,0 +1,19 @@
+{
+    "models": {
+        "neural_cost_predictor": {
+            "model_path": "../nn/trained/neural_cost_predictor.pth",
+            "config": {
+                "pos_encoding_dim": 8,
+                "heads": 4,
+                "beta": false,
+                "dropout": 0.5,
+                "normalization": "graph_norm",
+                "num_gat_layers": 4,
+                "activation": "elu"
+            }
+        }
+    }
+}
+
+
+
