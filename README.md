@@ -2,7 +2,7 @@
 
 This package solves the Traveling Salesman Problem with Drone (TSP-D) with 1 truck and 1 drone. This implements the Iterative Chainlet Partitioning (ICP) algorithm and it's neural acceleration as proposed in the following paper:
 
-* Lee, J. H., Kim, M., Park, J., & Kwon, C. (2025). The Iterative Chainlet Partitioning Algorithm for the Traveling Salesman Problem with Drone and Neural Acceleration. arXiv preprint arXiv:2504.15147.
+* [Lee, J. H., Kim, M., Park, J., & Kwon, C. (2025). The Iterative Chainlet Partitioning Algorithm for the Traveling Salesman Problem with Drone and Neural Acceleration. arXiv preprint arXiv:2504.15147.](https://arxiv.org/abs/2504.15147)
 
 If you use the ICP algorithm, please cite:
 ```
