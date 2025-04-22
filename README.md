@@ -6,7 +6,7 @@ This package solves the Traveling Salesman Problem with Drone (TSP-D) with 1 tru
 
 If you use the ICP algorithm, please cite:
 ```
-@misc{lee2025iterativechainletpartitioningalgorithm,
+@misc{lee2025iterative,
       title={The Iterative Chainlet Partitioning Algorithm for the Traveling Salesman Problem with Drone and Neural Acceleration}, 
       author={Jae Hyeok Lee and Minjun Kim and Jinkyoo Park and Changhyun Kwon},
       year={2025},
