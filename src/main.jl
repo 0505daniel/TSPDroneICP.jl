@@ -19,6 +19,7 @@ include("utils.jl")
 include("icp.jl")
 # include("neuro.jl")
 include("internals.jl")
+include("tsp_ep_all.jl")
 
 const PROBLEM_TYPES = Dict(
     :TSPD => nothing, # Basic TSPD
@@ -43,7 +44,8 @@ const CHAINLET_INITIALIZATION_METHODS = Dict(
 )
 
 const CHAINLET_SOLVING_METHODS = Dict(
-    :TSP_EP_all => TSPDrone.tsp_ep_all, 
+    :TSP_EP_all => tsp_ep_all_original,
+    :TSP_EP_all_boosted => tsp_ep_all_boosted,
 )
 
 const EVALUATION_METHODS = Dict(
