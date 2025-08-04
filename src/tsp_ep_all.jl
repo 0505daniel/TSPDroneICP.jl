@@ -1,18 +1,5 @@
 const MAX_DRONE_RANGE = Inf
 const MAX_TIME_LIMIT = Inf
-# function find_tsp_tour(Ct::Matrix{Float64})
-#     scale_factor = 1000
-#     dist_mtx = round.(Int, Ct .* scale_factor)
-#     tsp_tour, tsp_tour_len = Concorde.solve_tsp(dist_mtx)
-#     @assert tsp_tour[1] == 1
-#     return tsp_tour
-# end
-# function find_tsp_tour(x::Vector{Float64}, y::Vector{Float64})
-#     scale_factor = 1000
-#     tsp_tour, tsp_tour_len = Concorde.solve_tsp(x * scale_factor, y * scale_factor; dist="EUC_2D")
-#     @assert tsp_tour[1] == 1
-#     return tsp_tour
-# end
 function tspd_objective_value(truck_route, drone_route, Ct, Cd)
     combined_nodes = intersect(truck_route, drone_route)
     obj_val = 0.0
@@ -269,8 +256,9 @@ function tsp_ep_all(
     n, _ = size(Ct)
     improved = true
     if ep_boost
-    	dist_order = precompute_dist_order(Cd)
-		best_obj, t_route, d_route = exact_partitioning_boosted(init_tour, Ct, Cd, flying_range=flying_range, dist_order = dist_order)
+    	# dist_order = precompute_dist_order(Cd)
+		# best_obj, t_route, d_route = exact_partitioning_boosted(init_tour, Ct, Cd, flying_range=flying_range, dist_order = dist_order)
+        best_obj, t_route, d_route = exact_partitioning_boosted(init_tour, Ct, Cd, flying_range=flying_range)
     else
     	best_obj, t_route, d_route = exact_partitioning(init_tour, Ct, Cd, flying_range=flying_range)
     end
@@ -301,10 +289,12 @@ function tsp_ep_all(
                     is_time_over = time() - time0 > time_limit
                     if is_valid
                     	if ep_boost
-                    		ep_time, t_route, d_route = exact_partitioning_boosted(new_tour, Ct, Cd, flying_range=flying_range, dist_order=dist_order)
+                    		# ep_time, t_route, d_route = exact_partitioning_boosted(new_tour, Ct, Cd, flying_range=flying_range, dist_order=dist_order)
+                            ep_time, t_route, d_route = exact_partitioning_boosted(new_tour, Ct, Cd, flying_range=flying_range)
                     	else
                         	ep_time, t_route, d_route = exact_partitioning(new_tour, Ct, Cd, flying_range=flying_range)
                         end
+
                         if ep_time < cur_best_obj
                             cur_best_tour = copy(new_tour)
                             cur_best_t_route = copy(t_route)

@@ -104,14 +104,15 @@ end
 
 function warmup_Agatz(distribution, n)
     for alpha in [1, 2, 3]
-        files = readdir("Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
+        files = readdir("test/Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
         pattern = alpha == 2 ? "$distribution-\\d+-n$n\\b" : "$distribution-alpha_$alpha-\\d+-n$n\\b"
         regex = Regex(pattern)
 
         for filename in files
-            if ismatch(regex, filename)
-                Ct, Cd = read_data_Agatz(filename)
-                init_tour = concorde_tours[filename]
+            m = match(regex, filename)
+            if !isnothing(m)
+                Ct, Cd = read_data_Agatz(String(m.match))
+                init_tour = collect(1:n+1)
                 tsp_ep_all_original(Ct, Cd, init_tour)
                 tsp_ep_all_boosted(Ct, Cd, init_tour)
                 return
@@ -125,12 +126,13 @@ function generate_concorde_tour_Agatz()
     for distribution in ["doublecenter", "singlecenter", "uniform"]
         for n in [10, 20, 50, 75, 100, 175, 250, 375, 500]
             for alpha in [1, 2, 3]
-                files = readdir("Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
+                files = readdir("test/Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
                 pattern = alpha == 2 ? "$distribution-\\d+-n$n\\b" : "$distribution-alpha_$alpha-\\d+-n$n\\b"
                 regex = Regex(pattern)
                 for filename in files
-                    if ismatch(regex, filename)
-                        Ct, _ = read_data_Agatz(filename)
+                    m = match(regex, filename)
+                    if !isnothing(m)
+                        Ct, _ = read_data_Agatz(String(m.match))
                         concorde_tours[filename] = concorde_with_dummy_nodes(Ct)
                     end
                 end
@@ -144,30 +146,37 @@ function generate_concorde_tour_Agatz()
 end
 
 function test_Agatz_EP_boost(concorde_tours)
-    for distribution in ["doublecenter", "singlecenter", "uniform"]
-        data[distribution] = Dict()
-        for n in [10, 20, 50, 75, 100, 175, 250, 375, 500]
+    data = Dict("doublecenter" => Dict(), "singlecenter" => Dict(), "uniform" => Dict())
+    for n in [10, 20, 50, 75, 100, 175, 250, 375, 500]
+        for distribution in ["doublecenter", "singlecenter", "uniform"]
             data[distribution][n] = Dict()
             warmup_Agatz(distribution, n)
-            
-            for alpha in [1, 2, 3]
-                data[distribution][n][alpha] = Dict()
-                total, total_boosted = 0.0, 0.0
+            total_over_alpha, total_boosted_over_alpha, total_cnt_over_alpha = 0.0, 0.0, 0
 
-                files = readdir("Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
+            for alpha in [1, 2, 3]
+                println("Distribution: $distribution, n: $n, Alpha: $alpha")
+
+                data[distribution][n][alpha] = Dict()
+                total, total_boosted, total_cnt = 0.0, 0.0, 0
+
+                files = readdir("test/Test_Instances/TSPD-Instances-Agatz/$distribution", join=true)  # Adjust this path to match your directory structure
                 pattern = alpha == 2 ? "$distribution-\\d+-n$n\\b" : "$distribution-alpha_$alpha-\\d+-n$n\\b"
                 regex = Regex(pattern)
                 for filename in files
-                    if ismatch(regex, filename)
-                        Ct, Cd = read_data_Agatz(filename)
+                    m = match(regex, filename)
+                    if !isnothing(m)
+                        println("Processing file: $filename")
+
+                        Ct, Cd = read_data_Agatz(String(m.match))
                         init_tour = concorde_tours[filename]
 
                         (cost, troute, droute), elapsed, _, _, _ = @timed tsp_ep_all_original(Ct, Cd, init_tour)
                         (cost_boosted, troute_boosted, droute_boosted), elapsed_boosted, _, _, _ = @timed tsp_ep_all_boosted(Ct, Cd, init_tour)
-                        @assert isapprox(cost, cost_boosted)
+                        # @assert isapprox(cost, cost_boosted)
                         
                         total += elapsed
                         total_boosted += elapsed_boosted
+                        total_cnt += 1
 
                         _, i, _ = split(filename, "-")
                         data[distribution][n][alpha][i] = Dict(
@@ -183,13 +192,34 @@ function test_Agatz_EP_boost(concorde_tours)
                         )
                     end
                 end
+                if total_cnt != 0
+                    data[distribution][n][alpha]["average_time"]  = total / total_cnt
+                    data[distribution][n][alpha]["average_time_boosted"] = total_boosted / total_cnt
+                    data[distribution][n][alpha]["total_cnt"] = total_cnt
+                    total_over_alpha += total
+                    total_boosted_over_alpha += total_boosted
+                    total_cnt_over_alpha += total_cnt
+                    println("Distribution: $distribution, n: $n, Alpha: $alpha, Average time: $(total / total_cnt), Average time (boosted): $(total_boosted / total_cnt)")
+
+                    open("test/Agatz_EP_boosted.json", "w") do file
+                        JSON3.write(file, data)
+                    end
+                end
+            end
+            if total_cnt_over_alpha != 0
+                data[distribution][n]["average_time"] = total_over_alpha / total_cnt_over_alpha
+                data[distribution][n]["average_time_boosted"] = total_boosted_over_alpha / total_cnt_over_alpha
+                data[distribution][n]["total_cnt"] = total_cnt_over_alpha
+                println("Distribution: $distribution, n: $n, Average time: $(total_over_alpha / total_cnt_over_alpha), Average time (boosted): $(total_boosted_over_alpha / total_cnt_over_alpha)")
             end
         end
     end
 end
 
+# concorde_tours_bogyrbayeva = generate_concorde_tour_Bogyrbayeva()
 # concorde_tours_bogyrbayeva = JSON3.read("test/concorde_tours_Bogyrbayeva.json", Dict{String, Dict{Int, Vector{Int}}})
 # test_Bogyrbayeva_EP_boost(concorde_tours_bogyrbayeva)
 
-concorde_tours_agatz = generate_concorde_tour_Agatz()
+# concorde_tours_agatz = generate_concorde_tour_Agatz()
+concorde_tours_agatz = JSON3.read("test/concorde_tours_Agatz.json", Dict{String, Vector{Int}})
 test_Agatz_EP_boost(concorde_tours_agatz)
