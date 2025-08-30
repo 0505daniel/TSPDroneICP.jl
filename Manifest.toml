@@ -2,7 +2,7 @@
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "3833b2c508ee9774015c20d4d1f48b86f9781772"
+project_hash = "1de9b7f87627959015d0db27497cbfe717dbc801"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
@@ -248,11 +248,11 @@ version = "1.0.3"
 
 [[deps.TSPDrone]]
 deps = ["Concorde", "Match", "PyCall", "Statistics"]
-git-tree-sha1 = "be4e6cb9cf18383e5f6d86b0cc4742a0b2f0169d"
+git-tree-sha1 = "ffe34808223685123cc19b8406c1155c84ac7e8f"
 repo-rev = "master"
 repo-url = "https://github.com/chkwon/TSPDrone.jl.git"
 uuid = "ec3913bb-036d-4a1d-a51c-80e93297dcf2"
-version = "0.1.0"
+version = "0.2.0"
 
 [[deps.TSPLIB]]
 deps = ["DataStructures", "Match", "Test"]
