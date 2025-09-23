@@ -45,7 +45,7 @@ class TSPDGraphTransformerNetwork(nn.Module):
         for i, transformer_layer in enumerate(self.transformer_layers):
             x = transformer_layer(x, edge_index, edge_attr=edge_attr)
             # print(f'After layer {i}, x shape: {x.shape}')
-            x = self.norm_layers[i](x)
+            x = self.norm_layers[i](x, batch)
             x = self.activation(x)
 
         # Graph readout

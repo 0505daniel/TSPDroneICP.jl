@@ -1,5 +1,8 @@
 # TSPDroneICP.jl
 
+
+![ICP Algorithm Animation](icp_animation.gif)
+
 This package solves the Traveling Salesman Problem with Drone (TSP-D) with 1 truck and 1 drone. This implements the Iterative Chainlet Partitioning (ICP) algorithm and it's neural acceleration as proposed in the following paper:
 
 * [Lee, J. H., Kim, M., Park, J., & Kwon, C. (2025). The Iterative Chainlet Partitioning Algorithm for the Traveling Salesman Problem with Drone and Neural Acceleration. arXiv preprint arXiv:2504.15147.](https://arxiv.org/abs/2504.15147)
@@ -184,6 +187,7 @@ search_method::Symbol=:Greedy
 
 # Related Projects
 - [TSPDrone.jl](https://github.com/chkwon/TSPDrone.jl): Julia implementation of [Optimization Approaches for the Traveling Salesman Problem with Drone](https://pubsonline.informs.org/doi/abs/10.1287/trsc.2017.0791?journalCode=trsc_) and [A Deep Reinforcement Learning Approach for Solving the Traveling Salesman Problem with Drone](https://www.sciencedirect.com/science/article/abs/pii/S0968090X22003941).
+- [TSPDroneLIB.jl](https://github.com/chkwon/TSPDroneLIB) Benchmark instances or links to such instances for the Traveling Salesman Problem with Drone (TSP-D) and the Flying-Sidekick Traveling Salesman Problem (FS-TSP).
 - [Concorde.jl](https://github.com/chkwon/Concorde.jl): Julia wrapper of the [Concorde TSP Solver](http://www.math.uwaterloo.ca/tsp/concorde/index.html).
 - [LKH.jl](https://github.com/chkwon/LKH.jl): Julia wrapper of the [LKH heuristic solver](http://webhotel4.ruc.dk/~keld/research/LKH/).
 - [TravelingSalesmanHeuristics.jl](https://github.com/evanfields/TravelingSalesmanHeuristics.jl): Julia package for simple traveling salesman problem heuristics. 

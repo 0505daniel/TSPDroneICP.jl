@@ -11,15 +11,57 @@ import torch
 import pickle
 import json
 
-from net import TSPDGraphTransformerNetwork
-from infer import get_graph, predict_chainlet_length, batch_prediction, remove_module_prefix
+# from net import TSPDGraphTransformerNetwork
+# from infer import get_graph, predict_chainlet_length, batch_prediction, remove_module_prefix
 
-# Load configuration from JSON file
-config_file_path = os.path.join("../nn/trained", "model_config.json")
+# # Load configuration from JSON file
+# config_file_path = os.path.join("../nn/trained", "model_config.json")
+# with open(config_file_path, "r") as f:
+#     configs = json.load(f)
+
+# model_name = "neural_cost_predictor"
+# model_config = configs["models"][model_name]
+# model_path = model_config["model_path"]
+# config = model_config["config"]
+
+# print("CUDA Available:", torch.cuda.is_available())
+# print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "No CUDA Device")
+
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# model = TSPDGraphTransformerNetwork(
+#     in_channels=config['pos_encoding_dim'],
+#     hidden_channels=config['pos_encoding_dim'],
+#     out_channels=config['pos_encoding_dim'],
+#     heads=config['heads'],
+#     beta=config['beta'],
+#     dropout=config['dropout'],
+#     normalization=config['normalization'],
+#     num_gat_layers=config['num_gat_layers'],
+#     activation=config['activation']
+# )
+
+# # Load the state_dict
+# state_dict = torch.load(model_path, map_location=device, weights_only=True)
+
+# # Remove the 'module.' prefix if it exists
+# state_dict = remove_module_prefix(state_dict)
+
+# # Load the state_dict into the model
+# model.load_state_dict(state_dict)
+
+# model = model.to(device)
+# model.eval()
+
+from net_fr import TSPDGraphTransformerNetworkFlyingRange
+from infer_fr import get_graph, predict_chainlet_length, batch_prediction, remove_module_prefix
+
+config_file_path = os.path.join("../nn_fr/trained", "model_config.json")
+
 with open(config_file_path, "r") as f:
     configs = json.load(f)
 
-model_name = "neural_cost_predictor"
+model_name = "neural_cost_predictor_fr"
 model_config = configs["models"][model_name]
 model_path = model_config["model_path"]
 config = model_config["config"]
@@ -29,28 +71,13 @@ print("Device Name:", torch.cuda.get_device_name(0) if torch.cuda.is_available()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-model = TSPDGraphTransformerNetwork(
-    in_channels=config['pos_encoding_dim'],
-    hidden_channels=config['pos_encoding_dim'],
-    out_channels=config['pos_encoding_dim'],
-    heads=config['heads'],
-    beta=config['beta'],
-    dropout=config['dropout'],
-    normalization=config['normalization'],
-    num_gat_layers=config['num_gat_layers'],
-    activation=config['activation']
-)
-
-# Load the state_dict
 state_dict = torch.load(model_path, map_location=device, weights_only=True)
-
-# Remove the 'module.' prefix if it exists
+state_dict = state_dict['model_state_dict'] # Extract the correct dictionary
 state_dict = remove_module_prefix(state_dict)
 
-# Load the state_dict into the model
+model = TSPDGraphTransformerNetworkFlyingRange(dropout=0.0, edge_dim=3, **config)
 model.load_state_dict(state_dict)
-
-model = model.to(device)
+model.to(device)
 model.eval()
 """
 
@@ -77,7 +104,8 @@ function _batch_evaluate_chainlet(Chain::TSPDChain)
 
             _, _, scale = min_max_scale_matrix(truck_cost_submatrix)
 
-            push!(chainlets_to_predict, Dict("initial_route" => initial_route, "C_t" => truck_cost_submatrix, "C_d" => drone_cost_submatrix))
+            # push!(chainlets_to_predict, Dict("initial_route" => initial_route, "C_t" => truck_cost_submatrix, "C_d" => drone_cost_submatrix))
+            push!(chainlets_to_predict, Dict("initial_route" => initial_route, "C_t" => truck_cost_submatrix, "C_d" => drone_cost_submatrix, "flying_range" => Chain.flying_range))
             push!(chainlets_to_predict_scale, scale)
             push!(indices_to_update, i)
         end
@@ -85,7 +113,8 @@ function _batch_evaluate_chainlet(Chain::TSPDChain)
 
     # Batch prediction for all unseen chainlets
     if !isempty(chainlets_to_predict)
-        pred_chainlet_lengths = py"batch_prediction"(py"device", py"model", py"config['pos_encoding_dim']", chainlets_to_predict, chainlets_to_predict_scale)
+        # pred_chainlet_lengths = py"batch_prediction"(py"device", py"model", py"config['pos_encoding_dim']", chainlets_to_predict, chainlets_to_predict_scale)
+        pred_chainlet_lengths = py"batch_prediction"(py"device", py"model", 8, chainlets_to_predict, chainlets_to_predict_scale)
     
         @inbounds for j in eachindex(indices_to_update)
             i = indices_to_update[j]
@@ -121,7 +150,7 @@ function _neuro_search_chainlet(Chain::TSPDChain)::Bool
             truck_cost_submatrix::Matrix{Float64} = Chain.truck_cost_matrix[target_chainlet, :][:, target_chainlet]
             drone_cost_submatrix::Matrix{Float64} = Chain.drone_cost_matrix[target_chainlet, :][:, target_chainlet]
 
-            opt_chainlet_length, tr_idx, dr_idx = Chain.chainlet_solving_function(truck_cost_submatrix, drone_cost_submatrix, Chain.chainlet_truck_routes[target])
+            opt_chainlet_length, tr_idx, dr_idx = isnothing(Chain.flying_range) ? Chain.chainlet_solving_function(truck_cost_submatrix, drone_cost_submatrix, Chain.chainlet_truck_routes[target]) : Chain.chainlet_solving_function(truck_cost_submatrix, drone_cost_submatrix, Chain.chainlet_truck_routes[target], flying_range=Chain.flying_range)
                 
             new_chainlet_inc = Chain.chainlet_costs[target] - opt_chainlet_length
    
@@ -158,8 +187,14 @@ function test_nicp()
     truck_cost_mtx = dist_mtx .* 1.0
     drone_cost_mtx = truck_cost_mtx .* 0.5 
     @assert size(truck_cost_mtx) == size(drone_cost_mtx) == (n, n)
+    
+    max_dist = maximum(truck_cost_mtx)
+    flying_range_percentage = rand(5:50)
+    flying_range_percentage = Float64(flying_range_percentage)
 
-    result = solve_tspd(truck_cost_mtx, drone_cost_mtx; chainlet_evaluation_method=:Neuro)
+    flying_range = max_dist * flying_range_percentage / 200.0
+
+    result = solve_tspd(truck_cost_mtx, drone_cost_mtx; chainlet_evaluation_method=:Neuro, flying_range=flying_range)
     @info "Testing n = $n / Neuro ICP (NICP)"
 
     print_summary(result)

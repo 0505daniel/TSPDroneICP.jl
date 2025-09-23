@@ -1,0 +1,13 @@
+{
+    "models": {
+      "neural_cost_predictor_fr": {
+        "model_path": "../nn_flying_range/trained/neural_cost_predictor_fr.pth",
+        "config": {
+          "phi_layers": 2,
+          "phi_hidden": 64,
+          "phi_activation": "leaky_relu",
+          "phi_leaky_slope": 0.01
+        }
+      }
+    }
+  }
