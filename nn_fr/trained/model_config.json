@@ -1,7 +1,7 @@
 {
     "models": {
       "neural_cost_predictor_fr": {
-        "model_path": "../nn_flying_range/trained/neural_cost_predictor_fr.pth",
+        "model_path": "neural_cost_predictor_fr.pth",
         "config": {
           "phi_layers": 2,
           "phi_hidden": 64,

@@ -1,7 +1,8 @@
 
 using PyCall
-py_dir = realpath(joinpath(@__DIR__, "..", "nn"))
-# @show py_dir
+project_root = realpath(joinpath(@__DIR__, ".."))
+py_dir = joinpath(project_root, "nn_fr")
+config_path = joinpath(py_dir, "trained", "model_config.json")
 
 py"""
 import os
@@ -56,14 +57,15 @@ import json
 from net_fr import TSPDGraphTransformerNetworkFlyingRange
 from infer_fr import get_graph, predict_chainlet_length, batch_prediction, remove_module_prefix
 
-config_file_path = os.path.join("../nn_fr/trained", "model_config.json")
+config_file_path = $config_path
+config_dir = os.path.dirname(config_file_path)
 
 with open(config_file_path, "r") as f:
     configs = json.load(f)
 
 model_name = "neural_cost_predictor_fr"
 model_config = configs["models"][model_name]
-model_path = model_config["model_path"]
+model_path = os.path.join(config_dir, model_config["model_path"])
 config = model_config["config"]
 
 print("CUDA Available:", torch.cuda.is_available())
@@ -181,6 +183,9 @@ function _neuro_search_chainlet(Chain::TSPDChain)::Bool
 end
 
 function test_nicp()
+    
+    include("src/neuro.jl")
+
     n = 100
     dist_mtx = rand(n, n)
     dist_mtx = dist_mtx + dist_mtx' # symmetric distance only
@@ -197,5 +202,10 @@ function test_nicp()
     result = solve_tspd(truck_cost_mtx, drone_cost_mtx; chainlet_evaluation_method=:Neuro, flying_range=flying_range)
     @info "Testing n = $n / Neuro ICP (NICP)"
 
-    print_summary(result)
+    # TSPDroneICP.print_summary(result)
+    @show result.total_cost
+    @show result.truck_route
+    @show result.drone_route
+
+    @info "Successfully tested NICP"
 end
