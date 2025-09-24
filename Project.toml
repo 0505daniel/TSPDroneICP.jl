@@ -1,7 +1,7 @@
 name = "TSPDroneICP"
 uuid = "8c8b6666-8f41-4dc1-94df-9b29d6d038be"
 authors = ["Jae Hyeok Lee <daniel0000900@gmail.com> and contributors"]
-version = "0.2.0"
+version = "2.0.0"
 
 [deps]
 Concorde = "df6a336b-a67f-4155-81fc-4f05fe893652"
