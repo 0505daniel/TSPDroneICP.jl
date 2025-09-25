@@ -27,7 +27,7 @@ This TSPDroneICP.jl package is in MIT License. However, the underlying Concorde 
 # Requirements
 
 ```julia
-] add https://github.com/chkwon/TSPDrone.jl
+] add https://github.com/kaist-comet/TSPDrone.jl
 ```
 If you want just the ICP algorithm, the above will be sufficient. Skip the rest.
 
