@@ -67,11 +67,11 @@ If it does not use the Python installation you like, try the above process again
 # Installation
 To install:
 ```julia
-import Pkg; Pkg.add(url="https://github.com/0505daniel/TSPDroneICP.jl")
+import Pkg; Pkg.add(url="https://github.com/kaist-comet/TSPDroneICP.jl")
 ```
 or
 ```julia
-] add https://github.com/0505daniel/TSPDroneICP.jl
+] add https://github.com/kaist-comet/TSPDroneICP.jl
 ```
 
 # Using the Iterative Chainlet Partitioning (ICP) Algorithm
