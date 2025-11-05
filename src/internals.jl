@@ -10,7 +10,10 @@ function solve_tspd_by_ICP(
     chainlet_initialization_method::Symbol=:FI, 
     chainlet_solving_method::Symbol=:TSP_EP_all,
     chainlet_evaluation_method::Symbol=:Default,
-    search_method::Symbol=:Greedy
+    search_method::Symbol=:Greedy,
+    tsp_tour::Union{Vector{Int}, Nothing}=nothing,
+    truck_route::Union{Vector{Int}, Nothing}=nothing,
+    drone_route::Union{Vector{Int}, Nothing}=nothing
 )   
     
     return run_ICP(T, D; 
@@ -21,7 +24,10 @@ function solve_tspd_by_ICP(
     chainlet_initialization_method=chainlet_initialization_method, 
     chainlet_solving_method=chainlet_solving_method,
     chainlet_evaluation_method=chainlet_evaluation_method,
-    search_method=search_method)
+    search_method=search_method,
+    tsp_tour=tsp_tour,
+    truck_route=truck_route,
+    drone_route=drone_route)
 end
 
 function solve_tspd_by_ICP(

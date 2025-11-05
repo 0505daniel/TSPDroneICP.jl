@@ -154,7 +154,10 @@ chain_initialization_method::Symbol=:Concorde,
 chainlet_initialization_method::Symbol=:FI, 
 chainlet_solving_method::Symbol=:TSP_EP_all,
 chainlet_evaluation_method::Symbol=:Default,
-search_method::Symbol=:Greedy
+search_method::Symbol=:Greedy,
+tsp_tour::Union{Vector{Int}, Nothing}=nothing,
+truck_route::Union{Vector{Int}, Nothing}=nothing,
+drone_route::Union{Vector{Int}, Nothing}=nothing
 ```
 
 - ``problem_type``: The type of problem to solve. Currently, the only supported problem type is ``:TSPD``, which is the basic TSP-D. This flag is reserved for future extensions.
@@ -183,6 +186,10 @@ search_method::Symbol=:Greedy
   - ``:Roulette``: Uses roulette wheel selection.
   - ``:Softmax``: Uses a softmax probability distribution.
   > **Note:** When using neural acceleration, the selection strategy will be ``:Greedy`` regardless of what option is selected.
+
+You can provide custom input tours to skip certain initialization steps:
+- ``tsp_tour``: Optional custom TSP tour. If provided, the algorithm skips TSP tour generation and uses this tour for exact partitioning. The tour should be a vector of node indices starting at the depot (node 1) and ending at the dummy depot (node n+1).
+- ``truck_route`` & ``drone_route``: Optional custom truck and drone routes. If both are provided together, the algorithm skips both TSP tour generation and exact partitioning, using these routes directly as the initial solution. **Note:** Both routes must be provided together; providing only one will throw an error.
   
 
 # Related Projects

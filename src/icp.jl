@@ -84,17 +84,33 @@ function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
     chainlet_initialization_method::Symbol=:FI, 
     chainlet_solving_method::Symbol=:TSP_EP_all,
     chainlet_evaluation_method::Symbol=:Default,
-    search_method::Symbol=:Greedy)
+    search_method::Symbol=:Greedy,
+    tsp_tour::Union{Vector{Int}, Nothing}=nothing,
+    truck_route::Union{Vector{Int}, Nothing}=nothing,
+    drone_route::Union{Vector{Int}, Nothing}=nothing)
 
     n1, n2 = size(T)
     n_nodes = n1 - 1
     @assert size(T) == size(D)
     
-    @assert haskey(CHAIN_INITIALIZATION_METHODS, chain_initialization_method) "Invalid chain initialization method: $chain_initialization_method"
-    chain_initialization_function::Function = CHAIN_INITIALIZATION_METHODS[chain_initialization_method]
-
-    tsp_tour = chain_initialization_function(T)
-    total_cost, truck_route, drone_route = TSPDrone.exact_partitioning(tsp_tour, T, D; flying_range=flying_range)
+    # Validate that truck_route and drone_route are provided together if either is provided
+    if (truck_route !== nothing) != (drone_route !== nothing)
+        error("Both truck_route and drone_route must be provided together, or neither should be provided")
+    end
+    
+    # If truck_route and drone_route are provided, use them directly (skip TSP generation and exact_partitioning)
+    if truck_route !== nothing && drone_route !== nothing
+        # Use provided routes directly, skip TSP generation and exact_partitioning
+    # If only tsp_tour is provided, use it for exact_partitioning (skip TSP generation)
+    elseif tsp_tour !== nothing
+        total_cost, truck_route, drone_route = TSPDrone.exact_partitioning(tsp_tour, T, D; flying_range=flying_range)
+    # Normal flow: generate TSP tour and run exact_partitioning
+    else
+        @assert haskey(CHAIN_INITIALIZATION_METHODS, chain_initialization_method) "Invalid chain initialization method: $chain_initialization_method"
+        chain_initialization_function::Function = CHAIN_INITIALIZATION_METHODS[chain_initialization_method]
+        tsp_tour = chain_initialization_function(T)
+        total_cost, truck_route, drone_route = TSPDrone.exact_partitioning(tsp_tour, T, D; flying_range=flying_range)
+    end
     
     chain = TSPDChain(truck_route, drone_route, T, D; 
     problem_type=problem_type,
