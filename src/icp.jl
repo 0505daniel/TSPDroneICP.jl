@@ -129,9 +129,12 @@ function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
     chain.evaluation_function(chain)
 
     all_seen::Bool = chainlet_evaluation_method == :Neuro ? false : true # Flag for NICP
+    previous_objective_value::Float64 = chain.objective_value
     
     while (maximum(chain.chainlet_increment)) >= 0.01 || !all_seen
 
+        previous_iteration::Int = chain.iteration
+        
         if chainlet_evaluation_method == :Neuro
             all_seen = chain.search_function(chain)
         else
@@ -141,10 +144,18 @@ function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
         generate_chainlets(chain)
         chain.evaluation_function(chain)
 
-        if chain.iteration  > 5000
-            println("Hit max iterations")
+        # Check for false iteration due to numerical error accumulation of TSP-EP-all
+        # If objective_value didn't improve (or got worse), terminate.
+        if chain.objective_value >= previous_objective_value
+            @info "Algorithm Manually Terminated: No improvement detected (false iteration due to numerical error)"
+            # Only decrement iteration if an iteration actually occurred (was incremented)
+            if chain.iteration > previous_iteration
+                chain.iteration -= 1
+                @info "Iteration count decremented"
+            end
             break
         end
+        previous_objective_value = chain.objective_value
         
         # println("Algorithm Terminated")
     end
