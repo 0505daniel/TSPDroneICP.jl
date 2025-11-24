@@ -145,14 +145,12 @@ function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
         chain.evaluation_function(chain)
 
         # Check for false iteration due to numerical error accumulation of TSP-EP-all
-        # If objective_value didn't improve (or got worse), terminate.
-        if chain.objective_value >= previous_objective_value
+        # If objective_value didn't improve (or got worse) AND an iteration occurred, terminate.
+        # Only check if an iteration actually occurred (was incremented)
+        if chain.iteration > previous_iteration && chain.objective_value >= previous_objective_value
             @info "Algorithm Manually Terminated: No improvement detected (false iteration due to numerical error)"
-            # Only decrement iteration if an iteration actually occurred (was incremented)
-            if chain.iteration > previous_iteration
-                chain.iteration -= 1
-                @info "Iteration count decremented"
-            end
+            chain.iteration -= 1
+            @info "Iteration count decremented"
             break
         end
         previous_objective_value = chain.objective_value

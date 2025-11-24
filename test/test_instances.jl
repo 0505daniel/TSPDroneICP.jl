@@ -87,7 +87,7 @@ function Solve_Bogyrbayeva(file_name::String, sample_number::Int64;
     chain_initialization_method=chain_initialization_method,
     chainlet_initialization_method=chainlet_initialization_method, 
     chainlet_solving_method=chainlet_solving_method,
-    chainlet_evaluation_method=:Default,
+    chainlet_evaluation_method=chainlet_evaluation_method,
     search_method=search_method)
 end
 
