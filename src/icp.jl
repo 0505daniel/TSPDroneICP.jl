@@ -75,7 +75,6 @@ function _iterate_only_rings(Chain::TSPDChain, target::Int)
 
 end
 
-
 function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
     problem_type::Symbol=:TSPD, 
     flying_range::Float64=Inf, 
@@ -155,7 +154,6 @@ function run_ICP(T::Matrix{Float64}, D::Matrix{Float64};
         end
         previous_objective_value = chain.objective_value
         
-        # println("Algorithm Terminated")
     end
 
     return chain

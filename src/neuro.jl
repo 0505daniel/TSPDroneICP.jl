@@ -95,9 +95,12 @@ function _batch_evaluate_chainlet(Chain::TSPDChain)
         chainlet_tuple::Tuple{Vararg{Int}} = tuple(chainlet...)
 
         if chainlet_tuple in keys(Chain.chainlet_increments)
-            Chain.chainlet_increment[i] = Chain.chainlet_increments[chainlet_tuple][1]
+            # Cache stores (opt_chainlet_length, tr_idx, dr_idx)
+            opt_chainlet_length_cached = Chain.chainlet_increments[chainlet_tuple][1]
             Chain.chainlet_truck_routes[i] = Chain.chainlet_increments[chainlet_tuple][2]
             Chain.chainlet_drone_routes[i] = Chain.chainlet_increments[chainlet_tuple][3]
+            # Compute chainlet_increment from cached opt_chainlet_length and current chainlet_costs
+            Chain.chainlet_increment[i] = Chain.chainlet_costs[i] - opt_chainlet_length_cached
         else
             truck_cost_submatrix::Matrix{Float64} = Chain.truck_cost_matrix[chainlet, :][:, chainlet]
             drone_cost_submatrix::Matrix{Float64} = Chain.drone_cost_matrix[chainlet, :][:, chainlet]
@@ -126,7 +129,8 @@ function _batch_evaluate_chainlet(Chain::TSPDChain)
             pred_chainlet_length = pred_chainlet_lengths[j]
             Chain.chainlet_increment[i] = Chain.chainlet_costs[i] - pred_chainlet_length
             Chain.chainlet_truck_routes[i] = chainlets_to_predict[j]["initial_route"]
-            Chain.chainlet_increments[chainlet_tuple] = (Chain.chainlet_increment[i], Chain.chainlet_truck_routes[i], Chain.chainlet_drone_routes[i])
+            # Store opt_chainlet_length directly (not chainlet_increment) to avoid issues when chainlet_costs changes
+            Chain.chainlet_increments[chainlet_tuple] = (pred_chainlet_length, Chain.chainlet_truck_routes[i], Chain.chainlet_drone_routes[i])
         end
     end
         
@@ -144,9 +148,12 @@ function _neuro_search_chainlet(Chain::TSPDChain)::Bool
         target_chainlet_tuple::Tuple{Vararg{Int}} = tuple(target_chainlet...)
 
         if flag
-            Chain.chainlet_increment[target] = Chain.chainlet_increments[target_chainlet_tuple][1]        
+            # Cache stores (opt_chainlet_length, tr_idx, dr_idx)
+            opt_chainlet_length_cached = Chain.chainlet_increments[target_chainlet_tuple][1]
             Chain.chainlet_truck_routes[target] = Chain.chainlet_increments[target_chainlet_tuple][2]
             Chain.chainlet_drone_routes[target] = Chain.chainlet_increments[target_chainlet_tuple][3]
+            # Compute chainlet_increment from cached opt_chainlet_length and current chainlet_costs
+            Chain.chainlet_increment[target] = Chain.chainlet_costs[target] - opt_chainlet_length_cached
 
         else
             truck_cost_submatrix::Matrix{Float64} = Chain.truck_cost_matrix[target_chainlet, :][:, target_chainlet]
@@ -159,12 +166,14 @@ function _neuro_search_chainlet(Chain::TSPDChain)::Bool
             Chain.chainlet_increment[target] = Chain.chainlet_costs[target] - opt_chainlet_length
             Chain.chainlet_truck_routes[target] = tr_idx
             Chain.chainlet_drone_routes[target] = dr_idx
-            Chain.chainlet_increments[target_chainlet_tuple] = (Chain.chainlet_increment[target], Chain.chainlet_truck_routes[target], Chain.chainlet_drone_routes[target])
+            # Store opt_chainlet_length directly (not chainlet_increment) to avoid issues when chainlet_costs changes
+            Chain.chainlet_increments[target_chainlet_tuple] = (opt_chainlet_length, Chain.chainlet_truck_routes[target], Chain.chainlet_drone_routes[target])
 
             new_chainlet = chainlet_creation(target_chainlet, tr_idx, dr_idx)
    
             new_chainlet_tuple::Tuple{Vararg{Int}} = tuple(new_chainlet...)
-            Chain.chainlet_increments[new_chainlet_tuple] = (0.0, tr_idx, dr_idx)
+            # For result chainlet, opt_chainlet_length equals chainlet_costs (no improvement), so store chainlet_costs
+            Chain.chainlet_increments[new_chainlet_tuple] = (Chain.chainlet_costs[target], tr_idx, dr_idx)
         end
 
         if Chain.chainlet_increment[target] > 0.01

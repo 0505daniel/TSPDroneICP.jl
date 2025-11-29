@@ -86,27 +86,31 @@ function _evaluate_chainlet(Chain::TSPDChain)
         chainlet_tuple::Tuple{Vararg{Int}} = tuple(chainlet...)
 
         if chainlet_tuple in keys(Chain.chainlet_increments)
-            # println("chainlet is cached")
-            Chain.chainlet_increment[i] = Chain.chainlet_increments[chainlet_tuple][1]
+            # Cache stores (opt_chainlet_length, tr_idx, dr_idx)
+            opt_chainlet_length_cached = Chain.chainlet_increments[chainlet_tuple][1]
             Chain.chainlet_truck_routes[i] = Chain.chainlet_increments[chainlet_tuple][2]
             Chain.chainlet_drone_routes[i] = Chain.chainlet_increments[chainlet_tuple][3]
+            # Compute chainlet_increment from cached opt_chainlet_length and current chainlet_costs
+            Chain.chainlet_increment[i] = Chain.chainlet_costs[i] - opt_chainlet_length_cached
         else
-            # println("chainlet is not cached")
             truck_cost_submatrix::Matrix{Float64} = Chain.truck_cost_matrix[chainlet, :][:, chainlet]
             drone_cost_submatrix::Matrix{Float64} = Chain.drone_cost_matrix[chainlet, :][:, chainlet]
-
             initial_route = Chain.chainlet_initialization_function(chainlet, truck_cost_submatrix) 
+            
             opt_chainlet_length, tr_idx, dr_idx = isnothing(Chain.flying_range) ? Chain.chainlet_solving_function(truck_cost_submatrix, drone_cost_submatrix, initial_route) : Chain.chainlet_solving_function(truck_cost_submatrix, drone_cost_submatrix, initial_route, flying_range=Chain.flying_range)
 
             Chain.chainlet_increment[i] = Chain.chainlet_costs[i] - opt_chainlet_length
             Chain.chainlet_truck_routes[i] = tr_idx
             Chain.chainlet_drone_routes[i] = dr_idx
-            Chain.chainlet_increments[chainlet_tuple] = (Chain.chainlet_increment[i], tr_idx, dr_idx)
+            
+            # Store opt_chainlet_length directly (not chainlet_increment) to avoid issues when chainlet_costs changes
+            Chain.chainlet_increments[chainlet_tuple] = (opt_chainlet_length, tr_idx, dr_idx)
 
             # Also cache the result chainlet
             new_chainlet = chainlet_creation(chainlet, tr_idx, dr_idx)
             new_chainlet_tuple::Tuple{Vararg{Int}} = tuple(new_chainlet...)
-            Chain.chainlet_increments[new_chainlet_tuple] = (0, tr_idx, dr_idx)    
+            # For result chainlet, opt_chainlet_length equals chainlet_costs (no improvement), so store chainlet_costs
+            Chain.chainlet_increments[new_chainlet_tuple] = (Chain.chainlet_costs[i], tr_idx, dr_idx)    
         end
     end    
 end
