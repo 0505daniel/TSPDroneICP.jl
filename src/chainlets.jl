@@ -109,8 +109,8 @@ function _evaluate_chainlet(Chain::TSPDChain)
             # Also cache the result chainlet
             new_chainlet = chainlet_creation(chainlet, tr_idx, dr_idx)
             new_chainlet_tuple::Tuple{Vararg{Int}} = tuple(new_chainlet...)
-            # For result chainlet, opt_chainlet_length equals chainlet_costs (no improvement), so store chainlet_costs
-            Chain.chainlet_increments[new_chainlet_tuple] = (Chain.chainlet_costs[i], tr_idx, dr_idx)    
+            # For result chainlet, store opt_chainlet_length (same as the optimized original chainlet)
+            Chain.chainlet_increments[new_chainlet_tuple] = (opt_chainlet_length, tr_idx, dr_idx)    
         end
     end    
 end
