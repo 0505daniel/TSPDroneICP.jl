@@ -92,6 +92,7 @@ function _evaluate_chainlet(Chain::TSPDChain)
             Chain.chainlet_drone_routes[i] = Chain.chainlet_increments[chainlet_tuple][3]
             # Compute chainlet_increment from cached opt_chainlet_length and current chainlet_costs
             Chain.chainlet_increment[i] = Chain.chainlet_costs[i] - opt_chainlet_length_cached
+            
         else
             truck_cost_submatrix::Matrix{Float64} = Chain.truck_cost_matrix[chainlet, :][:, chainlet]
             drone_cost_submatrix::Matrix{Float64} = Chain.drone_cost_matrix[chainlet, :][:, chainlet]
@@ -103,16 +104,48 @@ function _evaluate_chainlet(Chain::TSPDChain)
             Chain.chainlet_truck_routes[i] = tr_idx
             Chain.chainlet_drone_routes[i] = dr_idx
             
+            
             # Store opt_chainlet_length directly (not chainlet_increment) to avoid issues when chainlet_costs changes
             Chain.chainlet_increments[chainlet_tuple] = (opt_chainlet_length, tr_idx, dr_idx)
 
             # Also cache the result chainlet
             new_chainlet = chainlet_creation(chainlet, tr_idx, dr_idx)
             new_chainlet_tuple::Tuple{Vararg{Int}} = tuple(new_chainlet...)
+            # Convert tr_idx and dr_idx from original chainlet indices to new chainlet indices
+            tr_nodes = [chainlet[i] for i in tr_idx]
+            dr_nodes = [chainlet[i] for i in dr_idx]
+            new_tr_idx = _convert_indices_to_new_chainlet(tr_nodes, new_chainlet)
+            new_dr_idx = _convert_indices_to_new_chainlet(dr_nodes, new_chainlet)
             # For result chainlet, store opt_chainlet_length (same as the optimized original chainlet)
-            Chain.chainlet_increments[new_chainlet_tuple] = (opt_chainlet_length, tr_idx, dr_idx)    
+            Chain.chainlet_increments[new_chainlet_tuple] = (opt_chainlet_length, new_tr_idx, new_dr_idx)
         end
     end    
+end
+
+function _convert_indices_to_new_chainlet(nodes::Vector{Int}, new_chainlet::Vector{Int})::Vector{Int}
+    # Convert node sequence to indices in new_chainlet
+    # Handles duplicates by matching occurrences in order
+    new_indices = Int[]
+    node_count = Dict{Int, Int}()  # Track occurrence count for each node
+    
+    for node in nodes
+        count = get(node_count, node, 0) + 1
+        node_count[node] = count
+        
+        # Find the count-th occurrence of this node in new_chainlet
+        occurrence = 0
+        for (idx, n) in enumerate(new_chainlet)
+            if n == node
+                occurrence += 1
+                if occurrence == count
+                    push!(new_indices, idx)
+                    break
+                end
+            end
+        end
+    end
+    
+    return new_indices
 end
 
 function chainlet_creation(chainlet::Vector{Int}, truck_route_idx::Vector{Int}, drone_route_idx::Vector{Int})::Vector{Int}

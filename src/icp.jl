@@ -47,7 +47,7 @@ end
 
 
 function _iterate_only_rings(Chain::TSPDChain, target::Int)
-
+    
     updated_route = Chain.chainlets[target]
     updated_truck_route = updated_route[Chain.chainlet_truck_routes[target]]
     updated_drone_route = updated_route[Chain.chainlet_drone_routes[target]]

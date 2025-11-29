@@ -172,8 +172,13 @@ function _neuro_search_chainlet(Chain::TSPDChain)::Bool
             new_chainlet = chainlet_creation(target_chainlet, tr_idx, dr_idx)
    
             new_chainlet_tuple::Tuple{Vararg{Int}} = tuple(new_chainlet...)
+            # Convert tr_idx and dr_idx from original chainlet indices to new chainlet indices
+            tr_nodes = [target_chainlet[i] for i in tr_idx]
+            dr_nodes = [target_chainlet[i] for i in dr_idx]
+            new_tr_idx = _convert_indices_to_new_chainlet(tr_nodes, new_chainlet)
+            new_dr_idx = _convert_indices_to_new_chainlet(dr_nodes, new_chainlet)
             # For result chainlet, store opt_chainlet_length (same as the optimized original chainlet)
-            Chain.chainlet_increments[new_chainlet_tuple] = (opt_chainlet_length, tr_idx, dr_idx)
+            Chain.chainlet_increments[new_chainlet_tuple] = (opt_chainlet_length, new_tr_idx, new_dr_idx)
         end
 
         if Chain.chainlet_increment[target] > 0.01
